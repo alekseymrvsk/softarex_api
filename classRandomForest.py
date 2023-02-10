@@ -5,34 +5,11 @@ from sklearn.ensemble import RandomForestRegressor
 import joblib
 from sklearn.model_selection import RepeatedKFold, cross_val_score
 from pathlib import Path
-from django.core.files.storage import FileSystemStorage
 
-NUMBER_COLUMNS_TEST = 42
-
-NUMBER_COLUMNS_TRAIN = 43
-
-INPUT_FILE_FORMAT = '.csv'
-
-
-
-def check_dataset(file, check_train=True):
-    if Path(file).suffix == INPUT_FILE_FORMAT:
-        dataset = pd.read_csv(file)
-        if check_train:
-            if len(dataset.columns) == NUMBER_COLUMNS_TRAIN:
-                return True
-            else:
-                return False
-        else:
-            if len(dataset.columns) == NUMBER_COLUMNS_TEST:
-                return True
-            else:
-                return False
 
 
 def dataset_split_train(INPUT_PATH_TRAIN='user_data/train.csv'):
     data_train = pd.read_csv(INPUT_PATH_TRAIN)
-
     y_train = data_train.revenue
     y_train = y_train.astype(int)
     x_train = data_train.drop(columns=['revenue', 'Id', 'City'])
