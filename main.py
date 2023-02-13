@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 from classRandomForest import MyRandomForest
 import pandas as pd
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -54,7 +55,8 @@ def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
     predict = model.predict_data(filepath)
 
     metric = model.get_metric()
+    df = pd.DataFrame(predict)
+    df.columns = ["Prediction"]
+    df.to_csv("output_data/prediction.csv", index_label="Id")
 
-    context = {'metric': metric, 'predict': predict}
-
-    return context
+    return FileResponse("output_data/prediction.csv", filename="prediction", media_type='text/csv')
