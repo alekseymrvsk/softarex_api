@@ -15,19 +15,18 @@ NUMBER_COLUMNS_TRAIN = 43
 INPUT_FILE_FORMAT = '.csv'
 
 
-def check_dataset(file, check_train=True):
-    if Path(file).suffix == INPUT_FILE_FORMAT:
-        dataset = pd.read_csv(file)
-        if check_train:
-            if len(dataset.columns) == NUMBER_COLUMNS_TRAIN:
-                return True
-            else:
-                return False
+def check_dataset(file_path, check_train=True):
+    dataset = pd.read_csv(filepath_or_buffer=file_path)
+    if check_train:
+        if len(dataset.columns) == NUMBER_COLUMNS_TRAIN:
+            return True
         else:
-            if len(dataset.columns) == NUMBER_COLUMNS_TEST:
-                return True
-            else:
-                return False
+            return False
+    else:
+        if len(dataset.columns) == NUMBER_COLUMNS_TEST:
+            return True
+        else:
+            return False
 
 
 @app.post("/predict")
@@ -39,7 +38,7 @@ def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(INPUT_TRAIN.file, buffer)
 
-    if not check_dataset(buffer, True):  # check train dataset
+    if not check_dataset(filepath, True):  # check train dataset
         return 404, "Please check your file"
 
     model = MyRandomForest()
@@ -49,7 +48,7 @@ def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(INPUT_TEST.file, buffer)
 
-    if not check_dataset(buffer, False):  # check test dataset
+    if not check_dataset(filepath, False):  # check test dataset
         return 404, "Please check your file"
 
     predict = model.predict_data(filepath)
