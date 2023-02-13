@@ -1,9 +1,7 @@
-import json
 from fastapi import FastAPI
 from fastapi import UploadFile
 import shutil
-from pathlib import Path
-from classRandomForest import MyRandomForest
+from app.classRandomForest import MyRandomForest
 import pandas as pd
 from fastapi.responses import FileResponse
 
@@ -58,14 +56,14 @@ def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
     #metric = model.get_metric()
     df = pd.DataFrame(predict)
     df.columns = ["Prediction"]
-    df.to_csv("output_data/prediction.csv", index_label="Id")
+    df.to_csv("app/output_data/prediction.csv", index_label="Id")
 
     return FileResponse("output_data/prediction.csv", filename="prediction", media_type='text/csv')
 
 # Client code
 # import requests
 #
-# url = 'http://127.0.0.1:8000/predict'
+# url = 'http://0.0.0.0:80/predict'
 # files = {'INPUT_TRAIN': open('data/train.csv', 'rb'), 'INPUT_TEST': open('data/test.csv', 'rb')}
 # resp = requests.get(url=url, files=files, allow_redirects=True)
 # with open("response.csv", "w") as f:

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/softarex_api_for_data.iml" filepath="$PROJECT_DIR$/.idea/softarex_api_for_data.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/softarex_api.iml" filepath="$PROJECT_DIR$/.idea/softarex_api.iml" />
     </modules>
   </component>
 </project>
