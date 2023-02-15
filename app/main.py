@@ -34,7 +34,7 @@ def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
     if not INPUT_TRAIN.filename.lower().endswith('.csv'):
         return 404, "Please upload csv  file."
 
-    filepath = "user_data/train.csv"
+    filepath = "app/user_data/train.csv"
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(INPUT_TRAIN.file, buffer)
 
@@ -44,7 +44,7 @@ def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
     model = MyRandomForest()
     model.fit_model(filepath)
 
-    filepath = "user_data/test.csv"
+    filepath = "app/user_data/test.csv"
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(INPUT_TEST.file, buffer)
 
@@ -58,7 +58,7 @@ def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
     df.columns = ["Prediction"]
     df.to_csv("app/output_data/prediction.csv", index_label="Id")
 
-    return FileResponse("output_data/prediction.csv", filename="prediction", media_type='text/csv')
+    return FileResponse("app/output_data/prediction.csv", filename="prediction", media_type='text/csv')
 
 # Client code
 # import requests
