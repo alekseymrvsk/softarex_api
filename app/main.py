@@ -1,9 +1,10 @@
 from fastapi import FastAPI
-from fastapi import UploadFile
+from fastapi import UploadFile, File
 import shutil
 from app.classRandomForest import MyRandomForest
 import pandas as pd
 from fastapi.responses import FileResponse
+from typing import Optional
 
 app = FastAPI()
 
@@ -15,8 +16,8 @@ INPUT_FILE_FORMAT = '.csv'
 
 
 # For checking train dataset set check_train True, for checking test dataset - False
-def check_dataset(file_path, check_train=True):
-    dataset = pd.read_csv(filepath_or_buffer=file_path)
+def check_dataset(filepath, check_train=True):
+    dataset = pd.read_csv(filepath_or_buffer=filepath)
     if check_train:
         if len(dataset.columns) == NUMBER_COLUMNS_TRAIN:
             return True
@@ -30,28 +31,29 @@ def check_dataset(file_path, check_train=True):
 
 
 @app.get("/predict")
-def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
-    if not INPUT_TRAIN.filename.lower().endswith('.csv'):
+def predict_data(INPUT_TEST: UploadFile, INPUT_TRAIN: Optional[UploadFile] = File(None)):
+    if not INPUT_TEST.filename.lower().endswith('.csv'):
         return 404, "Please upload csv  file."
-
-    filepath = "app/user_data/train.csv"
-    with open(filepath, "wb") as buffer:
-        shutil.copyfileobj(INPUT_TRAIN.file, buffer)
-
-    if not check_dataset(filepath, True):  # check train dataset
-        return 404, "Please check your file"
+    if INPUT_TRAIN is None:
+        filepath_train = "app/input/train.csv"
+    else:
+        filepath_train = "app/user_data/train.csv"
+        with open(filepath_train, "wb") as buffer:
+            shutil.copyfileobj(INPUT_TRAIN.file, buffer)
+            if not check_dataset(filepath_train, True):  # check train dataset
+                return 404, "Please check your file"
 
     model = MyRandomForest()
-    model.fit_model(filepath)
+    model.fit_model(filepath_train)
 
-    filepath = "app/user_data/test.csv"
-    with open(filepath, "wb") as buffer:
+    filepath_test = "app/user_data/test.csv"
+    with open(filepath_test, "wb") as buffer:
         shutil.copyfileobj(INPUT_TEST.file, buffer)
 
-    if not check_dataset(filepath, False):  # check test dataset
+    if not check_dataset(filepath_test, False):  # check test dataset
         return 404, "Please check your file"
 
-    predict = model.predict_data(filepath)
+    predict = model.predict_data(filepath_test)
 
     #metric = model.get_metric()
     df = pd.DataFrame(predict)
@@ -63,8 +65,8 @@ def predict_data(INPUT_TRAIN: UploadFile, INPUT_TEST: UploadFile):
 # Client code
 # import requests
 #
-# url = 'http://0.0.0.0:80/predict'
-# files = {'INPUT_TRAIN': open('data/train.csv', 'rb'), 'INPUT_TEST': open('data/test.csv', 'rb')}
+# url = 'http://0.0.0.0:8000/predict'
+# files = { 'INPUT_TEST': open('data/test.csv', 'rb'), 'INPUT_TRAIN': open('data/train.csv', 'rb')}
 # resp = requests.get(url=url, files=files, allow_redirects=True)
 # with open("response.csv", "w") as f:
 #     f.write(resp.text)
