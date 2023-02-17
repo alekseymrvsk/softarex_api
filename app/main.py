@@ -30,7 +30,7 @@ def check_dataset(filepath, check_train=True):
             return False
 
 
-@app.get("/predict")
+@app.get("/get_data")
 def predict_data(INPUT_TEST: UploadFile, INPUT_TRAIN: Optional[UploadFile] = File(None)):
     if not INPUT_TEST.filename.lower().endswith('.csv'):
         return 404, "Please upload csv  file."
@@ -65,7 +65,7 @@ def predict_data(INPUT_TEST: UploadFile, INPUT_TRAIN: Optional[UploadFile] = Fil
 # Client code
 # import requests
 #
-# url = 'http://0.0.0.0:8000/predict'
+# url = 'http://localhost:8080/get_data'
 # files = { 'INPUT_TEST': open('data/test.csv', 'rb'), 'INPUT_TRAIN': open('data/train.csv', 'rb')}
 # resp = requests.get(url=url, files=files, allow_redirects=True)
 # with open("response.csv", "w") as f:
