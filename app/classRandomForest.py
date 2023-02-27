@@ -1,19 +1,25 @@
 import numpy as np
 import pandas as pd
-import shutil
 from sklearn.ensemble import RandomForestRegressor
 import joblib
 from sklearn.model_selection import RepeatedKFold, cross_val_score
-from pathlib import Path
 
+
+# Parameters for model
+class Parameters:
+    RANDOM_STATE_MODEL = 1
+    TREES_COUNT = 50
+    N_SPLITS = 10
+    N_REPEATS = 3
+    RANDOM_STATE_METRIC = 1
 
 
 def dataset_split_train(INPUT_PATH_TRAIN='user_data/train.csv'):
     data_train = pd.read_csv(INPUT_PATH_TRAIN)
     y_train = data_train.revenue
     y_train = y_train.astype(int)
-    x_train = data_train.drop(columns=['revenue', 'Id', 'City'])
 
+    x_train = data_train.drop(columns=['revenue', 'Id', 'City'])
     x_train = x_train.replace({'City Group': {'Other': 0, 'Big Cities': 1}})
     x_train = x_train.replace({'Type': {'FC': 0, 'IL': 1, 'DT': 2, 'MB': 3}})
     x_train['Open Date'] = pd.to_datetime(x_train['Open Date'], format='%m/%d/%Y').astype(np.int64)
@@ -31,14 +37,6 @@ def dataset_split_test(INPUT_PATH_TEST='prediction/input/test.csv'):
     return x_test
 
 
-class Parameters:
-    RANDOM_STATE_MODEL = 1
-    TREES_COUNT = 50
-    N_SPLITS = 10
-    N_REPEATS = 3
-    RANDOM_STATE_METRIC = 1
-
-
 class MyRandomForest:
 
     def __init__(self, param=Parameters()):
@@ -51,7 +49,7 @@ class MyRandomForest:
         self.RANDOM_STATE_MODEL = self.param.RANDOM_STATE_MODEL
         self.TREES_COUNT = self.param.TREES_COUNT
 
-    def fit_model(self, input_path_train):
+    async def fit_model(self, input_path_train):
         dataset = dataset_split_train(input_path_train)
         x_train = dataset[0]
         y_train = dataset[1]
@@ -64,12 +62,12 @@ class MyRandomForest:
         scores = cross_val_score(model, x_train, y_train, scoring='neg_mean_absolute_error', cv=cv, n_jobs=-1)
         self.scores = abs(scores)
 
-    def get_metric(self):
+    async def get_metric(self):
         if self.scores is not None:
             return 'Mean MAE: %.3f (%.3f)' % (self.scores.mean(), self.scores.std())
         return None
 
-    def predict_data(self, input_path_test):
+    async def predict_data(self, input_path_test):
         dataset = dataset_split_test(input_path_test)
         x_test = dataset
         if self.model is not None:
