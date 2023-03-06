@@ -49,7 +49,7 @@ class MyRandomForest:
         self.RANDOM_STATE_MODEL = self.param.RANDOM_STATE_MODEL
         self.TREES_COUNT = self.param.TREES_COUNT
 
-    async def fit_model(self, input_path_train):
+    def fit_model(self, input_path_train):
         dataset = dataset_split_train(input_path_train)
         x_train = dataset[0]
         y_train = dataset[1]
@@ -62,12 +62,12 @@ class MyRandomForest:
         scores = cross_val_score(model, x_train, y_train, scoring='neg_mean_absolute_error', cv=cv, n_jobs=-1)
         self.scores = abs(scores)
 
-    async def get_metric(self):
+    def get_metric(self):
         if self.scores is not None:
             return 'Mean MAE: %.3f (%.3f)' % (self.scores.mean(), self.scores.std())
         return None
 
-    async def predict_data(self, input_path_test):
+    def predict_data(self, input_path_test):
         dataset = dataset_split_test(input_path_test)
         x_test = dataset
         if self.model is not None:

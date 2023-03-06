@@ -1,3 +1,5 @@
+import asyncio
+import functools
 from fastapi import FastAPI
 from fastapi import UploadFile, File
 import shutil
@@ -5,6 +7,7 @@ from app.classRandomForest import MyRandomForest
 import pandas as pd
 from fastapi.responses import FileResponse
 from typing import Optional
+from concurrent.futures import ProcessPoolExecutor
 
 app = FastAPI()
 
@@ -28,8 +31,20 @@ def check_dataset(filepath, check_train=True):
             return False
 
 
+def predict_data(data):
+    # def predict_data(filepath_test: str, filepath_train: str = None):
+    model = MyRandomForest()
+    model.fit_model(data['filepath_train'])
+
+    predict = model.predict_data(data['filepath_test'])
+
+    df = pd.DataFrame(predict)
+    df.columns = ["Prediction"]
+    df.to_csv("app/output_data/prediction.csv", index_label="Id")
+
+
 @app.get('/get_data')
-async def predict_data(INPUT_TEST: UploadFile, INPUT_TRAIN: Optional[UploadFile] = File(None)):
+async def run(INPUT_TEST: UploadFile, INPUT_TRAIN: Optional[UploadFile] = File(None)):
     if not INPUT_TEST.filename.lower().endswith('.csv'):
         return 404, "Please upload csv  file."
 
@@ -47,9 +62,6 @@ async def predict_data(INPUT_TEST: UploadFile, INPUT_TRAIN: Optional[UploadFile]
             if not check_dataset(filepath_train, True):  # check train dataset
                 return 404, "Please check your file"
 
-    model = MyRandomForest()
-    model.fit_model(filepath_train)
-
     filepath_test = "app/user_data/test.csv"
     with open(filepath_test, "wb") as buffer:
         shutil.copyfileobj(INPUT_TEST.file, buffer)
@@ -57,10 +69,10 @@ async def predict_data(INPUT_TEST: UploadFile, INPUT_TRAIN: Optional[UploadFile]
     if not check_dataset(filepath_test, False):  # check test dataset
         return 404, "Please check your file"
 
-    predict = model.predict_data(filepath_test)
+    with ProcessPoolExecutor() as executor:
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(executor,
+                                   functools.partial(predict_data, data={"filepath_train": filepath_train,
+                                                                         "filepath_test": filepath_test}))
 
-    df = pd.DataFrame(predict)
-    df.columns = ["Prediction"]
-    df.to_csv("app/output_data/prediction.csv", index_label="Id")
-
-    return FileResponse("app/output_data/prediction.csv", filename="prediction", media_type='text/csv')
+        return FileResponse("app/output_data/prediction.csv", filename="prediction", media_type='text/csv')
